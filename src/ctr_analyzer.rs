@@ -1,7 +1,6 @@
-// needs to implemet to methods - 1. print whole trace file, 2. print trace summary
 use super::ctr_parser::TraceRow;
 use std::cmp::min;
-use std::collections::HashMap;
+use indexmap::IndexMap;
 
 pub fn print_trace(events: &[TraceRow]) {
     for event in events {
@@ -13,10 +12,10 @@ pub fn print_trace(events: &[TraceRow]) {
     }
 }
 
-type SumEvent = HashMap<String, HashMap<String, u32>>;
+type SumEvent = IndexMap<String, IndexMap<String, u32>>;
 
 pub fn print_summarize_trace(events: &[TraceRow]) {
-    let mut summary: HashMap<String, SumEvent> = HashMap::new();
+    let mut summary: IndexMap<String, SumEvent> = IndexMap::new();
 
     let exclude = [
         "event",
@@ -46,12 +45,12 @@ pub fn print_summarize_trace(events: &[TraceRow]) {
     for event in events {
         let key = &event.name;
         if key.starts_with("INTERNAL") {
-            let inner = summary.entry(key.to_string()).or_insert(HashMap::new());
+            let inner = summary.entry(key.to_string()).or_insert(IndexMap::new());
 
             for parameter in &event.events {
                 let inner_key = &parameter.name;
                 if !exclude.contains(&inner_key.as_str()) {
-                    let param = inner.entry(inner_key.to_string()).or_insert(HashMap::new());
+                    let param = inner.entry(inner_key.to_string()).or_insert(IndexMap::new());
 
                     *param.entry(parameter.value.to_string()).or_insert(0) += 1;
                 }
@@ -61,7 +60,7 @@ pub fn print_summarize_trace(events: &[TraceRow]) {
     print_summary(summary);
 }
 
-fn print_summary(summary: HashMap<String, SumEvent>) {
+fn print_summary(summary: IndexMap<String, SumEvent>) {
     for (name, value) in summary {
         println!("{}", name);
 
