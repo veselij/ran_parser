@@ -1,15 +1,73 @@
-use super::ctr_parser::TraceRow;
+use super::ctr_parser::{TraceRow, TraceEvent};
 use std::cmp::min;
 use indexmap::IndexMap;
+use tabled::{builder::Builder,Style};
 
-pub fn print_trace(events: &[TraceRow]) {
+pub fn print_trace_in_row(events: &[TraceRow]) {
+    let mut builder = Builder::default();
+    let mut max_columns = 0;
+
     for event in events {
-        println!("{}", event.name);
-        for parameter in &event.events {
-            println!("\t{:<40}: {}", parameter.name, parameter.value);
-        }
-        println!("");
+
+        max_columns = std::cmp::max(max_columns, event.events.len() + 1);
+        let mut row: Vec<_> = event.events.iter().map(|obj| {format!("{}:{}", obj.name, obj.value)}).collect();
+        row.insert(0, event.name.to_string());
+        builder.add_record(row);
+
     }
+
+        let columns = (0..max_columns).map(|i| i.to_string()).collect::<Vec<_>>();
+        builder.set_columns(columns);
+        let table = builder.build().with(Style::ascii_rounded());
+        println!("{}", table);
+}
+
+pub fn print_trace_by_ueref(events: &[TraceRow], ueref: &str) {
+    let target_ueref = TraceEvent {name: "EVENT_PARAM_RAC_UE_REF".to_string(), value: ueref.to_string()};
+
+    for event in events {
+
+        if ueref == "all".to_string() || event.events.contains(&target_ueref) {
+            let dl_direction = TraceEvent {name: "EVENT_PARAM_MESSAGE_DIRECTION".to_string(), value: "EVENT_VALUE_SENT".to_string()};
+            let ul_direction = TraceEvent {name: "EVENT_PARAM_MESSAGE_DIRECTION".to_string(), value: "EVENT_VALUE_RECEIVED".to_string()};
+
+            let mut direction = "        ";
+            let mut reverse_s1_x2_direction = "";
+
+            if event.events.contains(&dl_direction) {
+                direction = "<---";
+                reverse_s1_x2_direction = "--->";
+
+            } else if event.events.contains(&ul_direction) {
+                direction = "--->";
+                reverse_s1_x2_direction = "<---";
+            }
+
+            if event.name.starts_with("S1") || event.name.starts_with("X2") {
+                println!("-   {} {}",event.name, reverse_s1_x2_direction);
+            } 
+            else {
+                println!("{}{}",direction, event.name);
+            }
+
+            for parameter in &event.events {
+
+                if parameter.name.contains("EVENT_ARRAY_TA") {
+                    let value: f32 =  parameter.value.parse::<f32>().unwrap() * f32::powi(10.0, -9) * 3.0 * f32::powi(10.0, 8) * 32.55 / 1000.0;
+                    println!("            {:<40}: {:.1}", parameter.name, value);
+                } else if parameter.name.contains("EVENT_PARAM_SERVING_RSRP") || parameter.name.contains("EVENT_PARAM_NEIGHBOR_RSRP") {
+                    let value: i32 =  parameter.value.parse::<i32>().unwrap() -140;
+                    println!("            {:<40}: {}", parameter.name, value);
+                } else {
+                    println!("            {:<40}: {}", parameter.name, parameter.value);
+                }
+            }
+            //println!("");
+        }
+
+
+    }
+
 }
 
 type SumEvent = IndexMap<String, IndexMap<String, u32>>;
@@ -65,7 +123,7 @@ fn print_summary(summary: IndexMap<String, SumEvent>) {
         println!("{}", name);
 
         for (parameter, parameter_values) in value {
-            print!("\t{:<40}: ", parameter);
+            print!("    {:<40}: ", parameter);
             let mut params: Vec<(&String, &u32)> = parameter_values.iter().collect();
             params.sort_by(|a, b| b.1.cmp(a.1));
             let elements: usize = min(5, params.len());

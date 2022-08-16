@@ -10,7 +10,7 @@ use super::xml_parse::{Event, Paramter};
 const RECORD_LENGTH: u16 = 2;
 const RECORD_TYPE: u16 = 2;
 
-pub fn read_trace(filename: &str, events: &HashMap<u16, Event>) -> Vec<TraceRow> {
+pub fn read_trace(filename: &str, events: &HashMap<u16, Event>, filter: &str) -> Vec<TraceRow> {
     let file = File::open(filename).expect(&format!("not able to parse file {}", filename));
     let reader = BufReader::new(file);
     let mut gz_reader = GzDecoder::new(reader);
@@ -36,8 +36,13 @@ pub fn read_trace(filename: &str, events: &HashMap<u16, Event>) -> Vec<TraceRow>
 
         if row_type == 4 {
             let parser = RowParser;
-            let event = parser.parse(buf_row, &events);
-            result.push(event);
+            let event = parser.parse(buf_row, &events, filter);
+            match event {
+                Some(event) => result.push(event),
+                None => {},
+
+            }
+
         }
     }
 }
@@ -47,13 +52,20 @@ pub struct TraceEvent {
     pub value: String,
 }
 
+impl PartialEq for TraceEvent {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name && self.value == other.value
+
+    }
+}
+
 pub struct TraceRow {
     pub name: String,
     pub events: Vec<TraceEvent>,
 }
 
 trait Parser {
-    fn parse(&self, record: Vec<u8>, events: &HashMap<u16, Event>) -> TraceRow;
+    fn parse(&self, record: Vec<u8>, events: &HashMap<u16, Event>, filter: &str) -> Option<TraceRow>;
 }
 
 trait Converter {
@@ -62,9 +74,12 @@ trait Converter {
 
 struct RowParser;
 impl Parser for RowParser {
-    fn parse(&self, record: Vec<u8>, events: &HashMap<u16, Event>) -> TraceRow {
+    fn parse(&self, record: Vec<u8>, events: &HashMap<u16, Event>, filter: &str) -> Option<TraceRow> {
         let id = u16::from_be_bytes(record[1..3].try_into().unwrap());
         let event = events.get(&id).unwrap();
+
+        if filter == "all" || filter == event.name {
+
 
         let mut trace_events: Vec<TraceEvent> = Vec::new();
 
@@ -93,10 +108,10 @@ impl Parser for RowParser {
             start += related_number_of_bytes;
         }
 
-        TraceRow {
+        Some(TraceRow {
             name: event.name.to_string(),
             events: trace_events,
-        }
+        }) } else {None}
     }
 }
 

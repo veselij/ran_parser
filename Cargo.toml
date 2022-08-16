@@ -10,3 +10,4 @@ xml-rs = "0.8"
 flate2 = { version = "1.0.17", features = ["zlib-ng"], default-features = false }
 hex = "0.4"
 indexmap = "1.9.1"
+tabled = "0.8.0"

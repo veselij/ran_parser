@@ -2,11 +2,14 @@ pub struct Config {
     pub xml: String,
     pub filename: String,
     pub output: Processing,
+    pub filter: String,
+    pub ueref: String,
 }
 
 pub enum Processing {
     Table,
     Summary,
+    Row,
 }
 
 impl Config {
@@ -23,13 +26,24 @@ impl Config {
         let output = match args.next() {
             Some(arg) if arg == "table" => Processing::Table,
             Some(arg) if arg == "summary" => Processing::Summary,
+            Some(arg) if arg == "row" => Processing::Row,
             Some(_) => return Err("did not specify result output, options 'table' and 'summary'"),
             None => return Err("did not specify result output, options 'table' and 'summary'"),
+        };
+        let filter = match args.next() {
+            Some(arg) => arg,
+            None => "all".to_string(),
+        };
+        let ueref = match args.next() {
+            Some(arg) => arg,
+            None => "all".to_string(),
         };
         Ok(Config {
             xml,
             filename,
             output,
+            filter,
+            ueref,
         })
     }
 }
