@@ -62,6 +62,7 @@ impl PartialEq for TraceEvent {
 pub struct TraceRow {
     pub name: String,
     pub events: Vec<TraceEvent>,
+    pub timestamp: u64,
 }
 
 trait Parser {
@@ -86,6 +87,8 @@ impl Parser for RowParser {
         let mut start: i64 = 3;
         let mut end: i64 = 3;
 
+        let mut timestamp: u64 = 0;
+
         for parameter in &event.parameters {
             let related_number_of_bytes = self.find_length(&parameter, &trace_events);
             end += related_number_of_bytes;
@@ -102,6 +105,16 @@ impl Parser for RowParser {
             if let Some(conv) = converter {
                 let trace_event = conv.convert(&record[start as usize..end as usize], &parameter);
 
+                if trace_event.name == "EVENT_PARAM_TIMESTAMP_HOUR" {
+                    timestamp += 60*trace_event.value.parse::<u64>().unwrap() *60 *1000
+                } else if trace_event.name == "EVENT_PARAM_TIMESTAMP_MINUTE" {
+                    timestamp += trace_event.value.parse::<u64>().unwrap() *60 *1000
+                } else if trace_event.name == "EVENT_PARAM_TIMESTAMP_SECOND" {
+                    timestamp += trace_event.value.parse::<u64>().unwrap() *1000
+                } else if trace_event.name == "EVENT_PARAM_TIMESTAMP_MILLISEC" {
+                    timestamp += trace_event.value.parse::<u64>().unwrap()
+                };
+
                 trace_events.push(trace_event);
             }
 
@@ -111,6 +124,7 @@ impl Parser for RowParser {
         Some(TraceRow {
             name: event.name.to_string(),
             events: trace_events,
+            timestamp,
         }) } else {None}
     }
 }

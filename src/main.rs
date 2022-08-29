@@ -14,11 +14,11 @@ fn main() {
 
     let events = xml_parse::parse_xml(&config.xml);
 
-    let parsed_events: Vec<ctr_parser::TraceRow> =
+    let mut parsed_events: Vec<ctr_parser::TraceRow> =
         ctr_parser::read_trace(&config.filename, &events, &config.filter);
 
     match config.output {
-        Processing::Table => ctr_analyzer::print_trace_by_ueref(&parsed_events, &config.ueref),
+        Processing::Table => ctr_analyzer::print_trace_by_ueref(&mut parsed_events, &config.ueref),
         Processing::Row => ctr_analyzer::print_trace_in_row(&parsed_events),
         Processing::Summary => ctr_analyzer::print_summarize_trace(&parsed_events),
     };

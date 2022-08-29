@@ -22,8 +22,10 @@ pub fn print_trace_in_row(events: &[TraceRow]) {
         println!("{}", table);
 }
 
-pub fn print_trace_by_ueref(events: &[TraceRow], ueref: &str) {
+pub fn print_trace_by_ueref(events: &mut Vec<TraceRow>, ueref: &str) {
     let target_ueref = TraceEvent {name: "EVENT_PARAM_RAC_UE_REF".to_string(), value: ueref.to_string()};
+
+    events.sort_by_key(|x| x.timestamp);
 
     for event in events {
 
