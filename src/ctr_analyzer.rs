@@ -74,7 +74,7 @@ pub fn print_trace_by_ueref(events: &mut Vec<TraceRow>, ueref: &str) {
 
 type SumEvent = IndexMap<String, IndexMap<String, u32>>;
 
-pub fn print_summarize_trace(events: &[TraceRow]) {
+pub fn get_summarize_trace(events: &[TraceRow]) -> IndexMap<String, IndexMap<String, IndexMap<String, u32>>> {
     let mut summary: IndexMap<String, SumEvent> = IndexMap::new();
 
     let exclude = [
@@ -117,10 +117,33 @@ pub fn print_summarize_trace(events: &[TraceRow]) {
             }
         }
     }
-    print_summary(summary);
+    summary
 }
 
-fn print_summary(summary: IndexMap<String, SumEvent>) {
+pub fn preapre_summary(summary: IndexMap<String, SumEvent>) -> IndexMap<String, String> {
+    let mut prepared_summary: IndexMap<String, String> = IndexMap::new();
+    for (name, value) in summary {
+        let mut preapred_result = "".to_string();
+
+        for (parameter, parameter_values) in value {
+            let mut prepared_value = format!("    {:<40}: ", parameter);
+            let mut params: Vec<(&String, &u32)> = parameter_values.iter().collect();
+            params.sort_by(|a, b| b.1.cmp(a.1));
+            let elements: usize = min(5, params.len());
+            for (value_name, value_count) in &params[0..elements] {
+                let prepared_value_count = format!("({}:{}) ", value_name, value_count);
+                prepared_value = format!("{}{}", prepared_value, prepared_value_count );
+            }
+            preapred_result = format!("{}\n{}",preapred_result,  prepared_value );
+        }
+        prepared_summary.insert(name, preapred_result);
+    }
+
+    prepared_summary
+
+}
+
+pub fn print_summary(summary: IndexMap<String, SumEvent>) {
     for (name, value) in summary {
         println!("{}", name);
 
