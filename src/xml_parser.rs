@@ -66,11 +66,10 @@ impl fmt::Display for Paramter {
 pub fn parse_xml(filename: &str) -> HashMap<u16, Event> {
     let file = File::open(filename).expect(&format!("not able to parse file {}", filename));
     let file = BufReader::new(file);
+    let mut parser = EventReader::new(file);
 
     let mut events: HashMap<u16, Event> = HashMap::new();
     let mut paramters: HashMap<String, Paramter> = HashMap::new();
-
-    let mut parser = EventReader::new(file);
 
     loop {
         let event = &parser.next().unwrap();
