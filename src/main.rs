@@ -1,25 +1,36 @@
-use parser::{Config, Processing};
+use ctr_analyzer::summarize_trace;
+use formatter::format_summary;
+use printer::{print_summary, print_trace_by_ueref, print_trace_in_row};
 use std::env;
 use std::process;
 
+pub mod config;
+pub mod converter;
 pub mod ctr_analyzer;
-pub mod ctr_parser;
-pub mod xml_parse;
+pub mod formatter;
+pub mod parser;
+pub mod printer;
+pub mod trace_reader;
+pub mod xml_parser;
 
 fn main() {
-    let config = Config::new(env::args()).unwrap_or_else(|err| {
+    let config = config::Config::new(env::args()).unwrap_or_else(|err| {
         eprintln!("problem when parsing arguments: {}", err);
         process::exit(1);
     });
 
-    let events = xml_parse::parse_xml(&config.xml);
-
-    let mut parsed_events: Vec<ctr_parser::TraceRow> =
-        ctr_parser::read_trace(&config.filename, &events, &config.filter);
+    let mut parser = trace_reader::TraceReader::new(&config);
+    parser.read_trace();
 
     match config.output {
-        Processing::Table => ctr_analyzer::print_trace_by_ueref(&mut parsed_events, &config.ueref),
-        Processing::Row => ctr_analyzer::print_trace_in_row(&parsed_events),
-        Processing::Summary => ctr_analyzer::print_summarize_trace(&parsed_events),
+        config::Processing::Table => {
+            print_trace_by_ueref(&mut parser.decoded_trace_events, &config.ueref)
+        }
+        config::Processing::Row => print_trace_in_row(&parser.decoded_trace_events),
+        config::Processing::Summary => {
+            let results = summarize_trace(&parser.decoded_trace_events);
+            let formated_results = format_summary(results);
+            print_summary(formated_results);
+        }
     };
 }
