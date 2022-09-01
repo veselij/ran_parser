@@ -92,3 +92,150 @@ impl RowParser {
         };
     }
 }
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse() {
+        let data = vec![
+            0, 4, 40, 7, 46, 38, 3, 106, 2, 0, 0, 0, 1, 172, 55, 1, 4, 19, 180, 19, 129, 123, 98,
+            0, 98, 242, 16, 255, 51, 200, 0, 191, 192, 43, 0, 83, 180, 1, 0, 24, 32, 23, 0, 20, 0,
+            0, 2, 0, 0, 64, 5, 192, 19, 129, 123, 98, 0, 8, 64, 4, 128, 4, 19, 180, 0, 0, 0, 0,
+        ];
+        let mut parser = RowParser::new(data, "all");
+
+        let params = vec![
+            Paramter {
+                name: "EVENT_PARAM_TIMESTAMP_HOUR".to_string(),
+                param_type: "UINT".to_string(),
+                number_of_bytes: 1,
+                enumeration: HashMap::new(),
+                related_name: "".to_string(),
+            },
+            Paramter {
+                name: "EVENT_PARAM_TIMESTAMP_MINUTE".to_string(),
+                param_type: "UINT".to_string(),
+                number_of_bytes: 1,
+                enumeration: HashMap::new(),
+                related_name: "".to_string(),
+            },
+            Paramter {
+                name: "EVENT_PARAM_TIMESTAMP_SECOND".to_string(),
+                param_type: "UINT".to_string(),
+                number_of_bytes: 1,
+                enumeration: HashMap::new(),
+                related_name: "".to_string(),
+            },
+            Paramter {
+                name: "EVENT_PARAM_TIMESTAMP_MILLISEC".to_string(),
+                param_type: "UINT".to_string(),
+                number_of_bytes: 2,
+                enumeration: HashMap::new(),
+                related_name: "".to_string(),
+            },
+            Paramter {
+                name: "EVENT_PARAM_SCANNER_ID".to_string(),
+                param_type: "UINT".to_string(),
+                number_of_bytes: 3,
+                enumeration: HashMap::new(),
+                related_name: "".to_string(),
+            },
+            Paramter {
+                name: "EVENT_PARAM_RBS_MODULE_ID".to_string(),
+                param_type: "ENUM".to_string(),
+                number_of_bytes: 1,
+                enumeration: HashMap::new(),
+                related_name: "".to_string(),
+            },
+            Paramter {
+                name: "EVENT_PARAM_GLOBAL_CELL_ID".to_string(),
+                param_type: "UINT".to_string(),
+                number_of_bytes: 4,
+                enumeration: HashMap::new(),
+                related_name: "".to_string(),
+            },
+            Paramter {
+                name: "EVENT_PARAM_ENBS1APID".to_string(),
+                param_type: "UINT".to_string(),
+                number_of_bytes: 3,
+                enumeration: HashMap::new(),
+                related_name: "".to_string(),
+            },
+            Paramter {
+                name: "EVENT_PARAM_MMES1APID".to_string(),
+                param_type: "UINT".to_string(),
+                number_of_bytes: 4,
+                enumeration: HashMap::new(),
+                related_name: "".to_string(),
+            },
+            Paramter {
+                name: "EVENT_PARAM_GUMMEI".to_string(),
+                param_type: "BINARY".to_string(),
+                number_of_bytes: 7,
+                enumeration: HashMap::new(),
+                related_name: "".to_string(),
+            },
+            Paramter {
+                name: "EVENT_PARAM_RAC_UE_REF".to_string(),
+                param_type: "UINT".to_string(),
+                number_of_bytes: 4,
+                enumeration: HashMap::new(),
+                related_name: "".to_string(),
+            },
+            Paramter {
+                name: "EVENT_PARAM_TRACE_RECORDING_SESSION_REFERENCE".to_string(),
+                param_type: "BINARY".to_string(),
+                number_of_bytes: 3,
+                enumeration: HashMap::new(),
+                related_name: "".to_string(),
+            },
+            Paramter {
+                name: "EVENT_PARAM_MESSAGE_DIRECTION".to_string(),
+                param_type: "ENUM".to_string(),
+                number_of_bytes: 1,
+                enumeration: HashMap::new(),
+                related_name: "".to_string(),
+            },
+            Paramter {
+                name: "EVENT_PARAM_L3MESSAGE_LENGTH".to_string(),
+                param_type: "UINT".to_string(),
+                number_of_bytes: 2,
+                enumeration: HashMap::new(),
+                related_name: "".to_string(),
+            },
+            Paramter {
+                name: "EVENT_PARAM_L3MESSAGE_CONTENTS".to_string(),
+                param_type: "BINARY".to_string(),
+                number_of_bytes: -1,
+                enumeration: HashMap::new(),
+                related_name: "EVENT_PARAM_L3MESSAGE_LENGTH".to_string(),
+            },
+            Paramter {
+                name: "EVENT_PARAM_RADIO_TYPE".to_string(),
+                param_type: "ENUM".to_string(),
+                number_of_bytes: 1,
+                enumeration: HashMap::new(),
+                related_name: "".to_string(),
+            },
+        ];
+
+        let event = Event {
+            name: "S1_UE_CONTEXT_RELEASE_COMPLETE".to_string(),
+            id: 1064,
+            elements: vec![],
+            parameters: params,
+        };
+
+        let mut events: HashMap<u16, Event> = HashMap::new();
+        events.insert(1064, event);
+
+        match parser.parse(&events) {
+            Some(e) => {
+                assert_eq!(e.name, "S1_UE_CONTEXT_RELEASE_COMPLETE");
+                assert_eq!(e.timestamp, 27998874);
+            }
+            None => panic!("failed"),
+        }
+    }
+}

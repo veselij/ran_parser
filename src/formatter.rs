@@ -36,3 +36,45 @@ fn merge_parameters(params: &[(&String, &u32)]) -> String {
     }
     prepared_value
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn format() {
+        let mut values: IndexMap<String, u32> = IndexMap::new();
+        values.insert("value1".to_string(), 1);
+        values.insert("value2".to_string(), 2);
+        let mut event: SumEvent = IndexMap::new();
+        event.insert("paramter1".to_string(), values);
+        let mut summary: Summary = IndexMap::new();
+        summary.insert("event1".to_string(), event);
+
+        let mut formatted_summary: IndexMap<String, String> = IndexMap::new();
+        let formattd_value = format!(
+            "\n    {:<40}: ({}:{}) ({}:{}) ",
+            "paramter1", "value2", 2, "value1", 1
+        );
+        formatted_summary.insert("event1".to_string(), formattd_value);
+        assert_eq!(formatted_summary, format_summary(summary));
+    }
+
+    #[test]
+    fn format_wrong() {
+        let mut values: IndexMap<String, u32> = IndexMap::new();
+        values.insert("value1".to_string(), 1);
+        values.insert("value2".to_string(), 2);
+        let mut event: SumEvent = IndexMap::new();
+        event.insert("paramter1".to_string(), values);
+        let mut summary: Summary = IndexMap::new();
+        summary.insert("event1".to_string(), event);
+        let mut wrong_formatted_summary: IndexMap<String, String> = IndexMap::new();
+        let wrong_formattd_value = format!(
+            "\n    {:<40}: ({}:{}) ({}:{}) ",
+            "paramter1", "value1", 1, "value2", 2
+        );
+        wrong_formatted_summary.insert("event1".to_string(), wrong_formattd_value);
+        assert_ne!(wrong_formatted_summary, format_summary(summary));
+    }
+}

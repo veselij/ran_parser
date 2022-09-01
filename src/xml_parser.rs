@@ -34,6 +34,8 @@ impl fmt::Display for Event {
             params.push_str(&element.param_type);
             params.push_str(",");
             params.push_str(&element.number_of_bytes.to_string());
+            params.push_str(",");
+            params.push_str(&element.related_name);
             params.push_str("\n");
         }
         write!(
@@ -88,6 +90,7 @@ pub fn parse_xml(filename: &str) -> HashMap<u16, Event> {
             }
             XmlEvent::EndDocument => {
                 fill_events_with_paramters(&mut events, paramters);
+                println!("{}", events.get(&1064).unwrap());
                 return events;
             }
             _ => {}

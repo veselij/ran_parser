@@ -82,3 +82,79 @@ impl Converter for EnumConverter {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashMap;
+
+    #[test]
+    fn test_int_converter() {
+        let paramter = Paramter {
+            name: "parameter".to_string(),
+            param_type: "int".to_string(),
+            number_of_bytes: 2,
+            enumeration: HashMap::new(),
+            related_name: "related_name".to_string(),
+        };
+        let record = [1, 2];
+        let result = TraceParameter {
+            name: paramter.name.to_string(),
+            value: "258".to_string(),
+        };
+        assert_eq!(result, IntConverter.convert(&record, &paramter));
+    }
+
+    #[test]
+    fn test_str_converter() {
+        let paramter = Paramter {
+            name: "parameter".to_string(),
+            param_type: "int".to_string(),
+            number_of_bytes: 2,
+            enumeration: HashMap::new(),
+            related_name: "related_name".to_string(),
+        };
+        let record = [72, 101, 108, 108, 111, 32, 87, 111, 114, 108, 100];
+        let result = TraceParameter {
+            name: paramter.name.to_string(),
+            value: "Hello World".to_string(),
+        };
+        assert_eq!(result, StrConverter.convert(&record, &paramter));
+    }
+
+    #[test]
+    fn test_binary_converter() {
+        let paramter = Paramter {
+            name: "parameter".to_string(),
+            param_type: "int".to_string(),
+            number_of_bytes: 2,
+            enumeration: HashMap::new(),
+            related_name: "related_name".to_string(),
+        };
+        let record = [72, 101, 108, 108, 111, 32, 87, 111, 114, 108, 100];
+        let result = TraceParameter {
+            name: paramter.name.to_string(),
+            value: "48656c6c6f20576f726c64".to_string(),
+        };
+        assert_eq!(result, BinaryConverter.convert(&record, &paramter));
+    }
+
+    #[test]
+    fn test_enum_converter() {
+        let mut enumeration: HashMap<u8, String> = HashMap::new();
+        enumeration.insert(1, "hello word".to_string());
+        let paramter = Paramter {
+            name: "parameter".to_string(),
+            param_type: "int".to_string(),
+            number_of_bytes: 1,
+            enumeration,
+            related_name: "related_name".to_string(),
+        };
+        let record = [1];
+        let result = TraceParameter {
+            name: paramter.name.to_string(),
+            value: "hello word".to_string(),
+        };
+        assert_eq!(result, EnumConverter.convert(&record, &paramter));
+    }
+}
