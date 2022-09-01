@@ -11,6 +11,7 @@ use super::xml_parser::{parse_xml, Event};
 const RECORD_LENGTH: u16 = 2;
 const RECORD_TYPE: u16 = 2;
 
+#[derive(Debug)]
 pub struct TraceParameter {
     pub name: String,
     pub value: String,

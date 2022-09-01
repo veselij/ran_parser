@@ -64,3 +64,59 @@ fn sum_parameters(sum_event: &mut SumEvent, parameters: &Vec<TraceParameter>) {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_summarize_trace() {
+        let parameter1 = TraceParameter {
+            name: "param1".to_string(),
+            value: "value1".to_string(),
+        };
+        let parameter2 = TraceParameter {
+            name: "param1".to_string(),
+            value: "value1".to_string(),
+        };
+
+        let event1 = TraceEvent {
+            name: "INTERNAL_event1".to_string(),
+            parameters: vec![parameter1, parameter2],
+            timestamp: 1,
+        };
+        let events = vec![event1];
+
+        let mut summary: Summary = IndexMap::new();
+        let mut event: SumEvent = IndexMap::new();
+        let mut value: IndexMap<String, u32> = IndexMap::new();
+        value.insert("value1".to_string(), 2);
+        event.insert("param1".to_string(), value);
+        summary.insert("INTERNAL_event1".to_string(), event);
+
+        assert_eq!(summary, summarize_trace(&events));
+    }
+
+    #[test]
+    fn test_summarize_trace_non_internal() {
+        let parameter1 = TraceParameter {
+            name: "param1".to_string(),
+            value: "value1".to_string(),
+        };
+        let parameter2 = TraceParameter {
+            name: "param1".to_string(),
+            value: "value1".to_string(),
+        };
+
+        let event1 = TraceEvent {
+            name: "event1".to_string(),
+            parameters: vec![parameter1, parameter2],
+            timestamp: 1,
+        };
+        let events = vec![event1];
+
+        let summary: Summary = IndexMap::new();
+
+        assert_eq!(summary, summarize_trace(&events));
+    }
+}
